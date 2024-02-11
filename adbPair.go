@@ -75,9 +75,27 @@ func main() {
 				var err error
 
 				if res, err = cmd.CombinedOutput(); err != nil {
-					//if strings.Contains(string(res),"unknown command"){
-					//}
-					fmt.Println(string(res))
+					if strings.Contains(string(res), "unknown command") {
+						fmt.Println("⚠️ 您的Adb版本尚未支持pair功能,尝试使用Adb Service Protocol.")
+						adbConnect := fmt.Sprintf("host:pair:%s:%s", password, fmt.Sprintf("%s:%d", entry.AddrIPv4, entry.Port))
+						connection := AdbConnection{}
+						connection.Init("tcp:127.0.0.1:5037")
+						connection.writeString(adbConnect)
+						var status string
+						status, err = connection.readStatus()
+						status = strings.ToLower(status)
+						if err != nil {
+							res = []byte(fmt.Sprintf("Failed: %s", err.Error()))
+						}
+						if strings.Contains(status, "okay") {
+							res = []byte("Successfully paired")
+						} else {
+							res = []byte(fmt.Sprintf("Failed: %s", status))
+						}
+
+					} else {
+						fmt.Println(string(res))
+					}
 
 				}
 
